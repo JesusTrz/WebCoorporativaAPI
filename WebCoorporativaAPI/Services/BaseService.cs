@@ -4,11 +4,13 @@ using WebCoorporativaAPI.Infraestructure;
 
 namespace WebCoorporativaAPI.Services
 {
+    /*<T> es el modelo*/
     public class BaseService<T> : IBaseService<T> where T : class
     {
+        /* Esta clase base va a heredar a los demás modelos, pues ya contiene los metodos del crud, así no es necesario tener que estar escribiendo el CRUD completo en cada servicio*/
         private readonly AppDBContext _context;
         private readonly DbSet<T> _dbSet;
-
+        /* Ya contiene la "Conexion" con base de datos, asi que ya no es necesario referenciarla desde los servicios*/
         public BaseService(AppDBContext context)
         {
             _context = context;

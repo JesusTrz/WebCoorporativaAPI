@@ -2,7 +2,7 @@
 
 namespace WebCoorporativaAPI.Infraestructure
 {
-    public interface IModuloService : IBaseService<ModuloModel>
+    public interface IPermisosPerfilService : IBaseService<PermisosPerfilModel>
     {
     }
 }

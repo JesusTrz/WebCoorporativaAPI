@@ -9,40 +9,39 @@ namespace WebCoorporativaAPI.Controllers
     [Route("api/[controller]")]
     [ApiController]
     [Authorize]
-    public class PerfilController : ControllerBase
+    public class PermisoPerfilController : ControllerBase
     {
-        private readonly IPerfilService _perfilService;
-
-        public PerfilController(IPerfilService perfilService)
+        private readonly IPermisosPerfilService _permisosPerfilService;
+        public PermisoPerfilController(IPermisosPerfilService permisosPerfilService)
         {
-            _perfilService = perfilService;
+            _permisosPerfilService = permisosPerfilService;
         }
 
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
-            var perfiles = await _perfilService.GetAll();
-            return Ok(perfiles);
+            var permisosPerfil = await _permisosPerfilService.GetAll();
+            return Ok(permisosPerfil);
         }
 
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(int id)
         {
-            var perfil = await _perfilService.GetById(id);
-            if (perfil == null)
+            var permisoPerfil = await _permisosPerfilService.GetById(id);
+            if (permisoPerfil == null)
             {
                 return NotFound();
             }
             else
             {
-                return Ok(perfil);
+                return Ok(permisoPerfil);
             }
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create(PerfilModel perfil)
+        public async Task<IActionResult> Create(PermisosPerfilModel permisoPerfil)
         {
-            var result = await _perfilService.Create(perfil);
+            var result = await _permisosPerfilService.Create(permisoPerfil);
             if (result == null)
             {
                 return BadRequest();
@@ -53,10 +52,10 @@ namespace WebCoorporativaAPI.Controllers
             }
         }
 
-        [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, PerfilModel perfil)
+        [HttpPut]
+        public async Task<IActionResult> Update(int id, PermisosPerfilModel permisoPerfil)
         {
-            var result = await _perfilService.Update(id, perfil);
+            var result = await _permisosPerfilService.Update(id, permisoPerfil);
             if (!result)
             {
                 return NotFound();
@@ -67,10 +66,10 @@ namespace WebCoorporativaAPI.Controllers
             }
         }
 
-        [HttpDelete("{id}")]
+        [HttpDelete]
         public async Task<IActionResult> Delete(int id)
         {
-            var result = await _perfilService.Delete(id);
+            var result = await _permisosPerfilService.Delete(id);
             if (!result)
             {
                 return NotFound();
