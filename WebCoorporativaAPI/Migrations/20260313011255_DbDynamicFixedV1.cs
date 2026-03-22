@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace WebCoorporativaAPI.Migrations
 {
     /// <inheritdoc />
-    public partial class DatabaseVersion1 : Migration
+    public partial class DbDynamicFixedV1 : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -31,7 +31,9 @@ namespace WebCoorporativaAPI.Migrations
                 {
                     IdModulo = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    strNombreModulo = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                    strNombreModulo = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Ruta = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Icono = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -100,9 +102,8 @@ namespace WebCoorporativaAPI.Migrations
                 {
                     Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     IdPerfil = table.Column<int>(type: "int", nullable: false),
-                    IdEstadoUsuario = table.Column<int>(type: "int", nullable: false),
+                    Activo = table.Column<bool>(type: "bit", nullable: false),
                     Imagen = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    PerfilIdPerfil = table.Column<int>(type: "int", nullable: false),
                     UserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     NormalizedUserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     Email = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
@@ -122,8 +123,8 @@ namespace WebCoorporativaAPI.Migrations
                 {
                     table.PrimaryKey("PK_AspNetUsers", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_AspNetUsers_Perfiles_PerfilIdPerfil",
-                        column: x => x.PerfilIdPerfil,
+                        name: "FK_AspNetUsers_Perfiles_IdPerfil",
+                        column: x => x.IdPerfil,
                         principalTable: "Perfiles",
                         principalColumn: "IdPerfil",
                         onDelete: ReferentialAction.Cascade);
@@ -280,9 +281,9 @@ namespace WebCoorporativaAPI.Migrations
                 column: "NormalizedEmail");
 
             migrationBuilder.CreateIndex(
-                name: "IX_AspNetUsers_PerfilIdPerfil",
+                name: "IX_AspNetUsers_IdPerfil",
                 table: "AspNetUsers",
-                column: "PerfilIdPerfil");
+                column: "IdPerfil");
 
             migrationBuilder.CreateIndex(
                 name: "UserNameIndex",

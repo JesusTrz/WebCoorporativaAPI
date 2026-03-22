@@ -9,6 +9,7 @@ namespace WebCoorporativaAPI.Controllers
     [Route("api/[controller]")]
     [ApiController]
     [Authorize]
+    [AllowAnonymous]
     public class ModuloController : ControllerBase
     {
         private readonly IModuloService _moduloService;

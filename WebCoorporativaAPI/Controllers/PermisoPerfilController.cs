@@ -9,6 +9,7 @@ namespace WebCoorporativaAPI.Controllers
     [Route("api/[controller]")]
     [ApiController]
     [Authorize]
+    [AllowAnonymous]
     public class PermisoPerfilController : ControllerBase
     {
         private readonly IPermisosPerfilService _permisosPerfilService;
@@ -24,17 +25,31 @@ namespace WebCoorporativaAPI.Controllers
             return Ok(permisosPerfil);
         }
 
+        //[HttpGet("{id}")]
+        //public async Task<IActionResult> GetById(int id)
+        //{
+        //    var permisoPerfil = await _permisosPerfilService.GetById(id);
+        //    if (permisoPerfil == null)
+        //    {
+        //        return NotFound();
+        //    }
+        //    else
+        //    {
+        //        return Ok(permisoPerfil);
+        //    }
+        //}
+
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetById(int id)
+        public async Task<IActionResult> GetPermisosByPerfil(int id)
         {
-            var permisoPerfil = await _permisosPerfilService.GetById(id);
-            if (permisoPerfil == null)
+            var permisosById = await _permisosPerfilService.GetPermisosByPerfil(id);
+            if (permisosById == null)
             {
                 return NotFound();
             }
             else
             {
-                return Ok(permisoPerfil);
+                return Ok(permisosById);
             }
         }
 
@@ -52,7 +67,7 @@ namespace WebCoorporativaAPI.Controllers
             }
         }
 
-        [HttpPut]
+        [HttpPut("{id}")]
         public async Task<IActionResult> Update(int id, PermisosPerfilModel permisoPerfil)
         {
             var result = await _permisosPerfilService.Update(id, permisoPerfil);
@@ -66,7 +81,7 @@ namespace WebCoorporativaAPI.Controllers
             }
         }
 
-        [HttpDelete]
+        [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
             var result = await _permisosPerfilService.Delete(id);

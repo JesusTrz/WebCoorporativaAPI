@@ -24,7 +24,8 @@ namespace WebCoorporativaAPI.Controllers
             if (result.Succeeded)
             {
                 return Ok("Usuario Creado");
-            } else
+            }
+            else
             {
                 return BadRequest(result.Errors);
             }
@@ -33,12 +34,13 @@ namespace WebCoorporativaAPI.Controllers
         [HttpPost]
         public async Task<IActionResult> Login(LoginDTO login)
         {
-            var token = await _authService.Login(login.UserName, login.Password);
+            var token = await _authService.Login(login.UserName, login.Password, login.CaptchaToken);
 
             if (token == null)
             {
                 return Unauthorized();
-            } else
+            }
+            else
             {
                 return Ok(new { token });
             }

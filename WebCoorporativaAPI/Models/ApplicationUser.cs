@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Identity;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace WebCoorporativaAPI.Models
 {
@@ -7,9 +8,10 @@ namespace WebCoorporativaAPI.Models
 
         public int IdPerfil { get; set; }
 
-        public int IdEstadoUsuario { get; set; }
+        public bool Activo { get; set; }
 
         public string? Imagen { get; set; }
-        public Models.PerfilModel Perfil { get; set; }
+        [ForeignKey("IdPerfil")]
+        public PerfilModel Perfil { get; set; }
     }
 }

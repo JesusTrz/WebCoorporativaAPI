@@ -12,7 +12,7 @@ using WebCoorporativaAPI.Data;
 namespace WebCoorporativaAPI.Migrations
 {
     [DbContext(typeof(AppDBContext))]
-    [Migration("20260308012755_DatabaseVersion1")]
+    [Migration("20260320164629_DatabaseVersion1")]
     partial class DatabaseVersion1
     {
         /// <inheritdoc />
@@ -166,6 +166,9 @@ namespace WebCoorporativaAPI.Migrations
                     b.Property<int>("AccessFailedCount")
                         .HasColumnType("int");
 
+                    b.Property<bool>("Activo")
+                        .HasColumnType("bit");
+
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
                         .HasColumnType("nvarchar(max)");
@@ -176,9 +179,6 @@ namespace WebCoorporativaAPI.Migrations
 
                     b.Property<bool>("EmailConfirmed")
                         .HasColumnType("bit");
-
-                    b.Property<int>("IdEstadoUsuario")
-                        .HasColumnType("int");
 
                     b.Property<int>("IdPerfil")
                         .HasColumnType("int");
@@ -203,9 +203,6 @@ namespace WebCoorporativaAPI.Migrations
                     b.Property<string>("PasswordHash")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("PerfilIdPerfil")
-                        .HasColumnType("int");
-
                     b.Property<string>("PhoneNumber")
                         .HasColumnType("nvarchar(max)");
 
@@ -224,6 +221,8 @@ namespace WebCoorporativaAPI.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("IdPerfil");
+
                     b.HasIndex("NormalizedEmail")
                         .HasDatabaseName("EmailIndex");
 
@@ -231,8 +230,6 @@ namespace WebCoorporativaAPI.Migrations
                         .IsUnique()
                         .HasDatabaseName("UserNameIndex")
                         .HasFilter("[NormalizedUserName] IS NOT NULL");
-
-                    b.HasIndex("PerfilIdPerfil");
 
                     b.ToTable("AspNetUsers", (string)null);
                 });
@@ -268,6 +265,14 @@ namespace WebCoorporativaAPI.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdModulo"));
+
+                    b.Property<string>("Icono")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Ruta")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("strNombreModulo")
                         .IsRequired()
@@ -397,7 +402,7 @@ namespace WebCoorporativaAPI.Migrations
                 {
                     b.HasOne("WebCoorporativaAPI.Models.PerfilModel", "Perfil")
                         .WithMany()
-                        .HasForeignKey("PerfilIdPerfil")
+                        .HasForeignKey("IdPerfil")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
