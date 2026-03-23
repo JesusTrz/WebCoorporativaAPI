@@ -17,13 +17,15 @@ namespace WebCoorporativaAPI.Services
         private readonly IConfiguration _configuration;
         private readonly IPermisosPerfilService _permisosPerfilService;
         private readonly IHttpClientFactory _httpClientFactory;
+        private readonly IPerfilService _perfilService;
 
-        public AuthService(UserManager<ApplicationUser> userManager, IConfiguration configuration, IPermisosPerfilService permisosPerfilService, IHttpClientFactory httpClientFactory)
+        public AuthService(UserManager<ApplicationUser> userManager, IConfiguration configuration, IPermisosPerfilService permisosPerfilService, IHttpClientFactory httpClientFactory, IPerfilService perfilService)
         {
             _userManager = userManager;
             _configuration = configuration;
             _permisosPerfilService = permisosPerfilService;
             _httpClientFactory = httpClientFactory;
+            _perfilService = perfilService;
         }
 
         public async Task<string?> Login(string? userName, string password, string captchaToken)
@@ -69,12 +71,13 @@ namespace WebCoorporativaAPI.Services
             var jwtSettings = _configuration.GetSection("Jwt");
 
             var permisos = await _permisosPerfilService.GetPermisosByPerfil(user.IdPerfil);
-
+            var perfil = await _perfilService.GetById(user.IdPerfil);
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, user.Id),
                 new Claim(ClaimTypes.Name, user.UserName),
-                new Claim("perfilId", user.IdPerfil.ToString())
+                new Claim("perfilId", user.IdPerfil.ToString()),
+                new Claim("esAdmin", (perfil?.BitAdministrador ?? false).ToString().ToLower())
             };
 
             var permisosUnicos = permisos

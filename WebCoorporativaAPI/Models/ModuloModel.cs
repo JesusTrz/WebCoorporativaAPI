@@ -7,11 +7,8 @@ namespace WebCoorporativaAPI.Models
         [Key]
         public int IdModulo { get; set; }
         public string strNombreModulo { get; set; }
-
         public string Ruta { get; set; }
-
-        public string Icono { get; set; }
-
+        //public string Clave { get; set; }
         public ICollection<PermisosPerfilModel> PermisosPerfilModels { get; set; }
 
     }

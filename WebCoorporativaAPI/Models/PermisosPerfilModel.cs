@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace WebCoorporativaAPI.Models
 {
@@ -17,7 +18,9 @@ namespace WebCoorporativaAPI.Models
         public bool BitEliminar { get; set; }
 
         public bool BitDetalle { get; set; }
+        [ForeignKey("IdModulo")]
         public Models.ModuloModel Modulo { get; set; }
+        [ForeignKey("IdPerfil")]
         public Models.PerfilModel Perfil { get; set; }
 
     }

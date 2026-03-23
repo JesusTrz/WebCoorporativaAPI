@@ -1,6 +1,9 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using WebCoorporativaAPI.Constant;
+using WebCoorporativaAPI.DTOs;
+using WebCoorporativaAPI.Helpers;
 using WebCoorporativaAPI.Infraestructure;
 using WebCoorporativaAPI.Models;
 
@@ -21,6 +24,9 @@ namespace WebCoorporativaAPI.Controllers
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
+            //if (!User.TienePermiso("3.consultar"))
+            //    return Forbid();
+
             var permisosPerfil = await _permisosPerfilService.GetAll();
             return Ok(permisosPerfil);
         }
@@ -42,6 +48,9 @@ namespace WebCoorporativaAPI.Controllers
         [HttpGet("{id}")]
         public async Task<IActionResult> GetPermisosByPerfil(int id)
         {
+            //if (!User.TienePermiso("3.consultar"))
+            //    return Forbid();
+
             var permisosById = await _permisosPerfilService.GetPermisosByPerfil(id);
             if (permisosById == null)
             {
@@ -53,9 +62,26 @@ namespace WebCoorporativaAPI.Controllers
             }
         }
 
+        [HttpPost("guardar-permisos")]
+        public async Task<IActionResult> GuardarPermisos([FromBody] PermisosPerfilDTO dto)
+        {
+            //if (!User.TienePermiso("3.agregar"))
+            //    return Forbid();
+            Console.WriteLine($"IdPerfil: {dto?.IdPerfil}");
+            Console.WriteLine($"Modulos count: {dto?.Modulos?.Count}");
+
+            if (dto == null || dto.Modulos == null)
+                return BadRequest("DTO vacío");
+            var result = await _permisosPerfilService.GuardarPermisos(dto);
+            return Ok(new { message = "Permisos Actualizados Correctamente" });
+        }
+
         [HttpPost]
         public async Task<IActionResult> Create(PermisosPerfilModel permisoPerfil)
         {
+            if (!User.TienePermiso("3.agregar"))
+                return Forbid();
+
             var result = await _permisosPerfilService.Create(permisoPerfil);
             if (result == null)
             {
@@ -70,6 +96,9 @@ namespace WebCoorporativaAPI.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(int id, PermisosPerfilModel permisoPerfil)
         {
+            if (!User.TienePermiso("3.editar"))
+                return Forbid();
+
             var result = await _permisosPerfilService.Update(id, permisoPerfil);
             if (!result)
             {
@@ -84,6 +113,9 @@ namespace WebCoorporativaAPI.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
+            if (!User.TienePermiso("3.eliminar"))
+                return Forbid();
+
             var result = await _permisosPerfilService.Delete(id);
             if (!result)
             {
@@ -93,6 +125,19 @@ namespace WebCoorporativaAPI.Controllers
             {
                 return Ok(result);
             }
+        }
+
+        [HttpDelete("perfil/{perfilId}")]
+        public async Task<IActionResult> DeleteByPerfil(int perfilId)
+        {
+            var permisos = await _permisosPerfilService.GetPermisosByPerfil(perfilId);
+
+            foreach (var p in permisos)
+            {
+                await _permisosPerfilService.Delete(p.IdPperfil);
+            }
+
+            return Ok();
         }
     }
 }

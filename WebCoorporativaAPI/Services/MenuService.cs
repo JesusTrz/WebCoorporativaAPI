@@ -33,7 +33,6 @@ namespace WebCoorporativaAPI.Services
                     ModuloId = modulo.IdModulo,
                     Nombre = modulo.strNombreModulo,
                     Ruta = modulo.Ruta,
-                    Icono = modulo.Icono,
 
                     Agregar = permiso.BitAgregar,
                     Editar = permiso.BitEditar,

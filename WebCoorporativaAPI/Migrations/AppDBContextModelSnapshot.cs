@@ -263,10 +263,6 @@ namespace WebCoorporativaAPI.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdModulo"));
 
-                    b.Property<string>("Icono")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("Ruta")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -329,17 +325,11 @@ namespace WebCoorporativaAPI.Migrations
                     b.Property<int>("IdPerfil")
                         .HasColumnType("int");
 
-                    b.Property<int>("ModuloIdModulo")
-                        .HasColumnType("int");
-
-                    b.Property<int>("PerfilIdPerfil")
-                        .HasColumnType("int");
-
                     b.HasKey("IdPperfil");
 
-                    b.HasIndex("ModuloIdModulo");
+                    b.HasIndex("IdModulo");
 
-                    b.HasIndex("PerfilIdPerfil");
+                    b.HasIndex("IdPerfil");
 
                     b.ToTable("PermisosPerfil");
                 });
@@ -421,13 +411,13 @@ namespace WebCoorporativaAPI.Migrations
                 {
                     b.HasOne("WebCoorporativaAPI.Models.ModuloModel", "Modulo")
                         .WithMany("PermisosPerfilModels")
-                        .HasForeignKey("ModuloIdModulo")
+                        .HasForeignKey("IdModulo")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("WebCoorporativaAPI.Models.PerfilModel", "Perfil")
                         .WithMany("PermisosPerfilModels")
-                        .HasForeignKey("PerfilIdPerfil")
+                        .HasForeignKey("IdPerfil")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 

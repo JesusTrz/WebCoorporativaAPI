@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace WebCoorporativaAPI.Migrations
 {
     /// <inheritdoc />
-    public partial class DbDynamicFixedV1 : Migration
+    public partial class fixdatabasev1 : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -32,8 +32,7 @@ namespace WebCoorporativaAPI.Migrations
                     IdModulo = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     strNombreModulo = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Ruta = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Icono = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                    Ruta = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -142,22 +141,20 @@ namespace WebCoorporativaAPI.Migrations
                     BitEditar = table.Column<bool>(type: "bit", nullable: false),
                     BitConsulta = table.Column<bool>(type: "bit", nullable: false),
                     BitEliminar = table.Column<bool>(type: "bit", nullable: false),
-                    BitDetalle = table.Column<bool>(type: "bit", nullable: false),
-                    ModuloIdModulo = table.Column<int>(type: "int", nullable: false),
-                    PerfilIdPerfil = table.Column<int>(type: "int", nullable: false)
+                    BitDetalle = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_PermisosPerfil", x => x.IdPperfil);
                     table.ForeignKey(
-                        name: "FK_PermisosPerfil_Modulos_ModuloIdModulo",
-                        column: x => x.ModuloIdModulo,
+                        name: "FK_PermisosPerfil_Modulos_IdModulo",
+                        column: x => x.IdModulo,
                         principalTable: "Modulos",
                         principalColumn: "IdModulo",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_PermisosPerfil_Perfiles_PerfilIdPerfil",
-                        column: x => x.PerfilIdPerfil,
+                        name: "FK_PermisosPerfil_Perfiles_IdPerfil",
+                        column: x => x.IdPerfil,
                         principalTable: "Perfiles",
                         principalColumn: "IdPerfil",
                         onDelete: ReferentialAction.Cascade);
@@ -298,14 +295,14 @@ namespace WebCoorporativaAPI.Migrations
                 column: "ModuloIdModulo");
 
             migrationBuilder.CreateIndex(
-                name: "IX_PermisosPerfil_ModuloIdModulo",
+                name: "IX_PermisosPerfil_IdModulo",
                 table: "PermisosPerfil",
-                column: "ModuloIdModulo");
+                column: "IdModulo");
 
             migrationBuilder.CreateIndex(
-                name: "IX_PermisosPerfil_PerfilIdPerfil",
+                name: "IX_PermisosPerfil_IdPerfil",
                 table: "PermisosPerfil",
-                column: "PerfilIdPerfil");
+                column: "IdPerfil");
         }
 
         /// <inheritdoc />

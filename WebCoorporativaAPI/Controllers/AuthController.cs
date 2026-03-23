@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using WebCoorporativaAPI.Constant;
 using WebCoorporativaAPI.DTOs;
+using WebCoorporativaAPI.Helpers;
 using WebCoorporativaAPI.Services;
 
 namespace WebCoorporativaAPI.Controllers
@@ -19,6 +21,9 @@ namespace WebCoorporativaAPI.Controllers
         [HttpPost("register")]
         public async Task<IActionResult> Register(RegisterDTO register)
         {
+           // if (!User.TienePermiso("4.agregar"))
+             //   return Forbid();
+
             var result = await _authService.Register(register);
 
             if (result.Succeeded)
