@@ -12,6 +12,9 @@ var builder = WebApplication.CreateBuilder(args);
 Microsoft.IdentityModel.Logging.IdentityModelEventSource.ShowPII = true;
 
 // 1. CONEXIÓN A BASE DE DATOS BLINDADA (Fuerza bruta como respaldo)
+//var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+
+
 var connectionString = Environment.GetEnvironmentVariable("DB_CONNECTION")
                        ?? "Server=db45210.public.databaseasp.net,1433;Database=db45210;User Id=db45210;Password=j@8SQ4h?5%Ar;MultipleActiveResultSets=true;TrustServerCertificate=True";
 
@@ -84,4 +87,72 @@ app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+
+// 5. BLOQUE DE SEEDING (Semilla de base de datos)
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    try
+    {
+        var context = services.GetRequiredService<AppDBContext>();
+        var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
+
+        // Ejecutamos nuestra clase semilla
+        await DbInitializer.SeedDataAsync(context, userManager);
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Error ejecutando el Seed: {ex.Message}");
+    }
+}
+
 app.Run();
+
+// 6. CLASE INICIALIZADORA (Al final del archivo para respetar Top-Level Statements)
+public static class DbInitializer
+{
+    public static async Task SeedDataAsync(AppDBContext context, UserManager<ApplicationUser> userManager)
+    {
+        // 1. Asegurarnos de que la base de datos y las tablas existan
+        await context.Database.EnsureCreatedAsync();
+
+        // 2. Sembrar el Perfil
+        if (!context.Perfiles.Any(p => p.strNombrePerfil == "Administrador Master"))
+        {
+            var perfilAdmin = new PerfilModel
+            {
+                strNombrePerfil = "Administrador Master",
+                BitAdministrador = true
+            };
+
+            context.Perfiles.Add(perfilAdmin);
+            await context.SaveChangesAsync();
+        }
+
+        // 3. Sembrar el Usuario 
+        if (await userManager.FindByNameAsync("admin") == null)
+        {
+            var perfil = context.Perfiles.FirstOrDefault(p => p.strNombrePerfil == "Administrador Master");
+
+            var adminUser = new ApplicationUser
+            {
+                UserName = "admin",
+                Email = "admin@empresa.com",
+                IdPerfil = perfil.IdPerfil,
+                Activo = true,
+                Imagen = null
+            };
+
+            // Creamos el usuario con contraseña segura
+            var result = await userManager.CreateAsync(adminUser, "Admin123456!");
+
+            if (!result.Succeeded)
+            {
+                foreach (var error in result.Errors)
+                {
+                    Console.WriteLine($"Error Seed Identity: {error.Description}");
+                }
+            }
+        }
+    }
+}

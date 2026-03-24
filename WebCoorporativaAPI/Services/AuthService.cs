@@ -46,12 +46,12 @@ namespace WebCoorporativaAPI.Services
                 return null;
             }
 
-            var captchaValido = await ValidarCaptcha(captchaToken);
+            //var captchaValido = await ValidarCaptcha(captchaToken);
 
-            if (!captchaValido)
-            {
-                return null;
-            }
+            //if (!captchaValido)
+            //{
+            //    return null;
+            //}
 
             return await GenerateJwtToken(user);
         }
