@@ -9,28 +9,16 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
-Microsoft.IdentityModel.Logging.IdentityModelEventSource.ShowPII = true; // Prueba Header 
-// Conexion
-// Intentamos leerlo de appsettings, y si no está, lo forzamos a leer directo del entorno de Linux (Railway)
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
-                       ?? Environment.GetEnvironmentVariable("ConnectionStrings__DefaultConnection")
-                       ?? builder.Configuration["ConnectionStrings__DefaultConnection"];
+Microsoft.IdentityModel.Logging.IdentityModelEventSource.ShowPII = true;
 
-if (string.IsNullOrEmpty(connectionString))
-{
-    throw new InvalidOperationException("¡Error Crítico! No se encontró la cadena de conexión en el servidor.");
-}
+// 1. CONEXIÓN A BASE DE DATOS BLINDADA (Fuerza bruta como respaldo)
+var connectionString = Environment.GetEnvironmentVariable("DB_CONNECTION")
+                       ?? "Server=db45210.public.databaseasp.net,1433;Database=db45210;User Id=db45210;Password=j@8SQ4h?5%Ar;MultipleActiveResultSets=true;TrustServerCertificate=True";
 
-// Add services to the container.
 builder.Services.AddDbContext<AppDBContext>(options => options.UseSqlServer(connectionString));
 
 // Inyeccion de Dependencias
-/* EJEMPLO:
- builder.Services.AddScoped<IDeviceService, DeviceService>();
- builder.Services.AddScoped<IDeviceConfigHistoryService, DeviceConfigHistoryService>();
- */
-
-builder.Services.AddScoped(typeof(IBaseService<>), typeof(BaseService<>)); // Agrega el servicio genérico para todas las entidades
+builder.Services.AddScoped(typeof(IBaseService<>), typeof(BaseService<>));
 builder.Services.AddScoped<IPerfilService, PerfilService>();
 builder.Services.AddScoped<IModuloService, ModuloService>();
 builder.Services.AddScoped<IPermisosPerfilService, PermisosPerfilService>();
@@ -41,13 +29,26 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
     .AddDefaultTokenProviders();
 
 builder.Services.AddControllers();
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 builder.Services.AddSwaggerGen();
 builder.Services.AddHttpClient();
 builder.Services.AddAuthorization();
 
-var jwtServices = builder.Configuration.GetSection("Jwt");
+// 2. CONFIGURACIÓN CORS (Indispensable para que Fetch API funcione desde el front)
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("PermitirFrontend", policy =>
+    {
+        policy.AllowAnyOrigin()
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
+});
+
+// 3. CONFIGURACIÓN JWT BLINDADA
+var jwtKey = Environment.GetEnvironmentVariable("JWT_KEY") ?? "MindCorp@WebCoorporativa#2026$SecretKey!JWT@Secure123456789";
+var jwtIssuer = Environment.GetEnvironmentVariable("JWT_ISSUER") ?? "WebCorporativaAPI";
+var jwtAudience = Environment.GetEnvironmentVariable("JWT_AUDIENCE") ?? "WebCorporativaAPI";
 
 builder.Services.AddAuthentication(options =>
 {
@@ -55,58 +56,32 @@ builder.Services.AddAuthentication(options =>
     options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
     options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
 })
-    .AddJwtBearer(options =>
+.AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
     {
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
-            ValidIssuer = jwtServices["Issuer"],
-            ValidAudience = jwtServices["Audience"],
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtServices["Key"]))
-        };
-
-        options.Events = new JwtBearerEvents
-        {
-            OnMessageReceived = context =>
-            {
-                var authHeader = context.Request.Headers["Authorization"].FirstOrDefault();
-
-                // Log de bytes para detectar caracteres invisibles
-                if (authHeader != null)
-                {
-                    var bytes = System.Text.Encoding.UTF8.GetBytes(authHeader);
-                    Console.WriteLine($"=== HEADER BYTES[0-20]: {string.Join(",", bytes.Take(20))}");
-                    Console.WriteLine($"=== HEADER COMPLETO LENGTH: {authHeader.Length}");
-                }
-
-                return Task.CompletedTask;
-            },
-            OnAuthenticationFailed = context =>
-            {
-                Console.WriteLine($"=== AUTH FAILED: {context.Exception.Message}");
-                return Task.CompletedTask;
-            }
-        };
-    });
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = jwtIssuer,
+        ValidAudience = jwtAudience,
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
+    };
+});
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.MapOpenApi();
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+// 4. PIPELINE DE PRODUCCIÓN
+app.UseCors("PermitirFrontend");
+
+// Quitamos el 'if' de Development para que el profe pueda evaluar Swagger en la URL pública
+app.MapOpenApi();
+app.UseSwagger();
+app.UseSwaggerUI();
 
 app.UseHttpsRedirection();
-
 app.UseAuthentication();
 app.UseAuthorization();
-
 app.MapControllers();
-
 app.Run();
