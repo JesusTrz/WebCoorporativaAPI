@@ -59,8 +59,7 @@ namespace WebCoorporativaAPI.Controllers
             foreach (var claim in User.Claims)
                 Console.WriteLine($"  {claim.Type}: {claim.Value}");
 
-            if (!User.TienePermiso("perfil.agregar"))
-                return Forbid();
+            //if (!User.TienePermiso("perfil.agregar")) return Forbid();
 
             var result = await _perfilService.Create(perfil);
             return result == null ? BadRequest() : Ok(result);

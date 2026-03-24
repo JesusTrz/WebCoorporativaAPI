@@ -21,7 +21,7 @@ namespace WebCoorporativaAPI.Controllers
         [HttpPost("register")]
         public async Task<IActionResult> Register(RegisterDTO register)
         {
-            if (!User.TienePermiso("usuario.agregar")) return Forbid();
+            //if (!User.TienePermiso("usuario.agregar")) return Forbid();
 
             var result = await _authService.Register(register);
 
