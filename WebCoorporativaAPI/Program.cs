@@ -11,7 +11,15 @@ using System.Text;
 var builder = WebApplication.CreateBuilder(args);
 Microsoft.IdentityModel.Logging.IdentityModelEventSource.ShowPII = true; // Prueba Header 
 // Conexion
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+// Intentamos leerlo de appsettings, y si no está, lo forzamos a leer directo del entorno de Linux (Railway)
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+                       ?? Environment.GetEnvironmentVariable("ConnectionStrings__DefaultConnection")
+                       ?? builder.Configuration["ConnectionStrings__DefaultConnection"];
+
+if (string.IsNullOrEmpty(connectionString))
+{
+    throw new InvalidOperationException("¡Error Crítico! No se encontró la cadena de conexión en el servidor.");
+}
 
 // Add services to the container.
 builder.Services.AddDbContext<AppDBContext>(options => options.UseSqlServer(connectionString));
