@@ -4,6 +4,6 @@
     {
         public string strNombreModulo { get; set; }
         public string Ruta { get; set; }
-        //public string Clave { get; set; }
+        public string Clave { get; set; }
     }
 }
