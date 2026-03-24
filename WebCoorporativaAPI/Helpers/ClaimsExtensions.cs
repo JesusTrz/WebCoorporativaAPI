@@ -7,8 +7,13 @@ namespace WebCoorporativaAPI.Helpers
     {
         public static bool TienePermiso(this ClaimsPrincipal user, string permiso)
         {
-            if (user == null)
-                return false;
+            if (user == null) return false;
+
+            // Si es admin tiene todos los permisos
+            //if (user.Claims.Any(c => c.Type == "esAdmin" && c.Value == "true"))
+            //    return true;
+            if (user.Claims.Any(c => c.Type == "esAdmin" && c.Value.Equals("true", StringComparison.OrdinalIgnoreCase)))
+                return true;
 
             return user.Claims
                 .Where(c => c.Type == "permiso")

@@ -18,14 +18,16 @@ namespace WebCoorporativaAPI.Services
         private readonly IPermisosPerfilService _permisosPerfilService;
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly IPerfilService _perfilService;
+        private readonly IModuloService _moduloService;
 
-        public AuthService(UserManager<ApplicationUser> userManager, IConfiguration configuration, IPermisosPerfilService permisosPerfilService, IHttpClientFactory httpClientFactory, IPerfilService perfilService)
+        public AuthService(UserManager<ApplicationUser> userManager, IConfiguration configuration, IPermisosPerfilService permisosPerfilService, IHttpClientFactory httpClientFactory, IPerfilService perfilService, IModuloService moduloService)
         {
             _userManager = userManager;
             _configuration = configuration;
             _permisosPerfilService = permisosPerfilService;
             _httpClientFactory = httpClientFactory;
             _perfilService = perfilService;
+            _moduloService = moduloService;
         }
 
         public async Task<string?> Login(string? userName, string password, string captchaToken)
@@ -69,9 +71,17 @@ namespace WebCoorporativaAPI.Services
         private async Task<string> GenerateJwtToken(ApplicationUser user)
         {
             var jwtSettings = _configuration.GetSection("Jwt");
+            //var permisos = await _permisosPerfilService.GetPermisosByPerfil(user.IdPerfil);
+            var perfil = await _perfilService.GetById(user.IdPerfil);
 
             var permisos = await _permisosPerfilService.GetPermisosByPerfil(user.IdPerfil);
-            var perfil = await _perfilService.GetById(user.IdPerfil);
+
+            // DIAGNÓSTICO - quitar después
+            Console.WriteLine($"=== PERMISOS COUNT: {permisos?.Count() ?? -1}");
+            Console.WriteLine($"=== PERFIL ADMIN: {perfil?.BitAdministrador}");
+            foreach (var p in permisos ?? [])
+                Console.WriteLine($"  Modulo: {p.Modulo?.Clave ?? "NULL"}, Agregar:{p.BitAgregar}");
+
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, user.Id),
@@ -80,21 +90,39 @@ namespace WebCoorporativaAPI.Services
                 new Claim("esAdmin", (perfil?.BitAdministrador ?? false).ToString().ToLower())
             };
 
+
+
             var permisosUnicos = permisos
             .SelectMany(p => new[]
             {
-                p.BitAgregar ? $"{p.IdModulo}.agregar" : null,
-                p.BitEditar ? $"{p.IdModulo}.editar" : null,
-                p.BitEliminar ? $"{p.IdModulo}.eliminar" : null,
-                p.BitConsulta ? $"{p.IdModulo}.consultar" : null,
-                p.BitDetalle ? $"{p.IdModulo}.detalle" : null
+                p.BitAgregar ? $"{p.Modulo.Clave}.agregar" : null,
+                p.BitEditar ? $"{p.Modulo.Clave}.editar" : null,
+                p.BitEliminar ? $"{p.Modulo.Clave}.eliminar" : null,
+                p.BitConsulta ? $"{p.Modulo.Clave}.consultar" : null,
+                p.BitDetalle ? $"{p.Modulo.Clave}.detalle" : null
             })
             .Where(p => p != null)
             .Distinct();
 
-            foreach (var permiso in permisosUnicos)
+            if (perfil?.BitAdministrador == true)
             {
-                claims.Add(new Claim("permiso", permiso));
+                var modulos = await _moduloService.GetAll(); // necesitas esto
+
+                foreach (var modulo in modulos)
+                {
+                    claims.Add(new Claim("permiso", $"{modulo.Clave}.agregar"));
+                    claims.Add(new Claim("permiso", $"{modulo.Clave}.editar"));
+                    claims.Add(new Claim("permiso", $"{modulo.Clave}.eliminar"));
+                    claims.Add(new Claim("permiso", $"{modulo.Clave}.consultar"));
+                    claims.Add(new Claim("permiso", $"{modulo.Clave}.detalle"));
+                }
+            }
+            else
+            {
+                foreach (var permiso in permisosUnicos)
+                {
+                    claims.Add(new Claim("permiso", permiso));
+                }
             }
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings["Key"]));

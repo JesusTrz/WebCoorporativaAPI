@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WebCoorporativaAPI.DTOs;
+using WebCoorporativaAPI.Helpers;
 using WebCoorporativaAPI.Infraestructure;
 using WebCoorporativaAPI.Models;
 
@@ -61,6 +62,8 @@ namespace WebCoorporativaAPI.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(string id, [FromBody] EditarUsuarioDto dto)
         {
+            if (!User.TienePermiso("usuario.editar")) return Forbid();
+
             var user = await _userManager.FindByIdAsync(id);
             if (user == null) return NotFound();
 
@@ -76,6 +79,8 @@ namespace WebCoorporativaAPI.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(string id)
         {
+            if (!User.TienePermiso("usuario.eliminar")) return Forbid();
+
             var user = await _userManager.FindByIdAsync(id);
             if (user == null) return NotFound();
 

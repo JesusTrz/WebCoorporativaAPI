@@ -14,9 +14,27 @@ namespace WebCoorporativaAPI.Services
             _context = context;
         }
 
+        //public async Task<List<PermisosPerfilModel>> GetPermisosByPerfil(int perfilId)
+        //{
+        //    return await _context.PermisosPerfil
+        //        .Where(p => p.IdPerfil == perfilId)
+        //        .Select(p => new PermisosPerfilModel
+        //        {
+        //            IdPperfil = p.IdPperfil,
+        //            IdModulo = p.IdModulo,
+        //            IdPerfil = p.IdPerfil,
+        //            BitAgregar = p.BitAgregar,
+        //            BitEditar = p.BitEditar,
+        //            BitConsulta = p.BitConsulta,
+        //            BitEliminar = p.BitEliminar,
+        //            BitDetalle = p.BitDetalle
+        //        })
+        //        .ToListAsync();
+        //}
         public async Task<List<PermisosPerfilModel>> GetPermisosByPerfil(int perfilId)
         {
             return await _context.PermisosPerfil
+                .Include(p => p.Modulo)
                 .Where(p => p.IdPerfil == perfilId)
                 .Select(p => new PermisosPerfilModel
                 {
@@ -27,7 +45,12 @@ namespace WebCoorporativaAPI.Services
                     BitEditar = p.BitEditar,
                     BitConsulta = p.BitConsulta,
                     BitEliminar = p.BitEliminar,
-                    BitDetalle = p.BitDetalle
+                    BitDetalle = p.BitDetalle,
+                    Modulo = new ModuloModel
+                    {
+                        IdModulo = p.Modulo.IdModulo,
+                        Clave = p.Modulo.Clave // ← Solo lo que necesitas
+                    }
                 })
                 .ToListAsync();
         }

@@ -9,7 +9,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
-
+Microsoft.IdentityModel.Logging.IdentityModelEventSource.ShowPII = true; // Prueba Header 
 // Conexion
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 
@@ -45,6 +45,7 @@ builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
     options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
 })
     .AddJwtBearer(options =>
     {
@@ -61,9 +62,23 @@ builder.Services.AddAuthentication(options =>
 
         options.Events = new JwtBearerEvents
         {
+            OnMessageReceived = context =>
+            {
+                var authHeader = context.Request.Headers["Authorization"].FirstOrDefault();
+
+                // Log de bytes para detectar caracteres invisibles
+                if (authHeader != null)
+                {
+                    var bytes = System.Text.Encoding.UTF8.GetBytes(authHeader);
+                    Console.WriteLine($"=== HEADER BYTES[0-20]: {string.Join(",", bytes.Take(20))}");
+                    Console.WriteLine($"=== HEADER COMPLETO LENGTH: {authHeader.Length}");
+                }
+
+                return Task.CompletedTask;
+            },
             OnAuthenticationFailed = context =>
             {
-                Console.WriteLine($"JWT Error: {context.Exception.Message}");
+                Console.WriteLine($"=== AUTH FAILED: {context.Exception.Message}");
                 return Task.CompletedTask;
             }
         };

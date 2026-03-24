@@ -65,8 +65,8 @@ namespace WebCoorporativaAPI.Controllers
         [HttpPost("guardar-permisos")]
         public async Task<IActionResult> GuardarPermisos([FromBody] PermisosPerfilDTO dto)
         {
-            //if (!User.TienePermiso("3.agregar"))
-            //    return Forbid();
+            if (!User.TienePermiso("permisosperfil.agregar")) return Forbid();
+
             Console.WriteLine($"IdPerfil: {dto?.IdPerfil}");
             Console.WriteLine($"Modulos count: {dto?.Modulos?.Count}");
 
@@ -79,8 +79,7 @@ namespace WebCoorporativaAPI.Controllers
         [HttpPost]
         public async Task<IActionResult> Create(PermisosPerfilModel permisoPerfil)
         {
-            if (!User.TienePermiso("3.agregar"))
-                return Forbid();
+            if (!User.TienePermiso("permisosperfil.agregar")) return Forbid();
 
             var result = await _permisosPerfilService.Create(permisoPerfil);
             if (result == null)
@@ -96,8 +95,7 @@ namespace WebCoorporativaAPI.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(int id, PermisosPerfilModel permisoPerfil)
         {
-            if (!User.TienePermiso("3.editar"))
-                return Forbid();
+            if (!User.TienePermiso("permisosperfil.editar")) return Forbid();
 
             var result = await _permisosPerfilService.Update(id, permisoPerfil);
             if (!result)
@@ -113,8 +111,7 @@ namespace WebCoorporativaAPI.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
-            if (!User.TienePermiso("3.eliminar"))
-                return Forbid();
+            if (!User.TienePermiso("permisosperfil.eliminar")) return Forbid();
 
             var result = await _permisosPerfilService.Delete(id);
             if (!result)
@@ -130,6 +127,8 @@ namespace WebCoorporativaAPI.Controllers
         [HttpDelete("perfil/{perfilId}")]
         public async Task<IActionResult> DeleteByPerfil(int perfilId)
         {
+            if (!User.TienePermiso("permisosperfil.eliminar")) return Forbid();
+
             var permisos = await _permisosPerfilService.GetPermisosByPerfil(perfilId);
 
             foreach (var p in permisos)
