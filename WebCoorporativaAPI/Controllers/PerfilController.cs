@@ -53,7 +53,7 @@ namespace WebCoorporativaAPI.Controllers
         {
 
             //if (!User.TienePermiso("2.agregar"))
-              //  return Forbid();
+            //  return Forbid();
 
             var result = await _perfilService.Create(perfil);
             if (result == null)
@@ -69,25 +69,22 @@ namespace WebCoorporativaAPI.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(int id, PerfilModel perfil)
         {
-            if (!User.TienePermiso("2.editar"))
-                return Forbid();
+            var existing = await _perfilService.GetById(id);
+            if (existing == null) return NotFound();
 
-            var result = await _perfilService.Update(id, perfil);
-            if (!result)
-            {
-                return NotFound();
-            }
-            else
-            {
-                return Ok(result);
-            }
+            // Solo actualiza los campos editables
+            existing.strNombrePerfil = perfil.strNombrePerfil;
+            existing.BitAdministrador = perfil.BitAdministrador;
+
+            var result = await _perfilService.Update(id, existing);
+            return result ? Ok() : NotFound();
         }
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
-            if (!User.TienePermiso("2.eliminar"))
-                return Forbid();
+            //if (!User.TienePermiso("1.eliminar"))
+            //    return Forbid();
 
             var result = await _perfilService.Delete(id);
             if (!result)

@@ -36,7 +36,12 @@ namespace WebCoorporativaAPI.Services
 
         public async Task<bool> Update(int id, T entity)
         {
-            _context.Entry(entity).State = EntityState.Modified;
+            var existing = await _dbSet.FindAsync(id);
+            if (existing == null)
+                return false;
+
+            // Copia los valores del entity al existing
+            _context.Entry(existing).CurrentValues.SetValues(entity);
             await _context.SaveChangesAsync();
             return true;
         }
