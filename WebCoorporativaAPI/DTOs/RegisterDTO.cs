@@ -6,5 +6,6 @@
         public string Password { get; set; }
         public int IdPerfil { get; set; }
         public bool Activo { get; set; }
+        public IFormFile? Imagen { get; set; }
     }
 }

@@ -1,24 +1,26 @@
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 using WebCoorporativaAPI.Data;
+using WebCoorporativaAPI.Helpers;
 using WebCoorporativaAPI.Infraestructure;
 using WebCoorporativaAPI.Models;
 using WebCoorporativaAPI.Services;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
-using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 Microsoft.IdentityModel.Logging.IdentityModelEventSource.ShowPII = true;
 
 // 1. CONEXIÓN A BASE DE DATOS BLINDADA (Fuerza bruta como respaldo)
-//var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 
 
-var connectionString = Environment.GetEnvironmentVariable("DB_CONNECTION")
-                       ?? "Server=db45210.public.databaseasp.net,1433;Database=db45210;User Id=db45210;Password=j@8SQ4h?5%Ar;MultipleActiveResultSets=true;TrustServerCertificate=True";
+//var connectionString = Environment.GetEnvironmentVariable("DB_CONNECTION")
+//                       ?? "Server=db45210.public.databaseasp.net,1433;Database=db45210;User Id=db45210;Password=j@8SQ4h?5%Ar;MultipleActiveResultSets=true;TrustServerCertificate=True";
 
 builder.Services.AddDbContext<AppDBContext>(options => options.UseSqlServer(connectionString));
+builder.Services.Configure<CloudinarySettings>(builder.Configuration.GetSection("CloudinarySettings"));
 
 // Inyeccion de Dependencias
 builder.Services.AddScoped(typeof(IBaseService<>), typeof(BaseService<>));
@@ -26,6 +28,7 @@ builder.Services.AddScoped<IPerfilService, PerfilService>();
 builder.Services.AddScoped<IModuloService, ModuloService>();
 builder.Services.AddScoped<IPermisosPerfilService, PermisosPerfilService>();
 builder.Services.AddScoped<AuthService>();
+builder.Services.AddScoped<IPhotoService, PhotoService>();
 
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
     .AddEntityFrameworkStores<AppDBContext>()

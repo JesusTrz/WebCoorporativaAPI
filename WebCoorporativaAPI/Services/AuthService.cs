@@ -19,8 +19,9 @@ namespace WebCoorporativaAPI.Services
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly IPerfilService _perfilService;
         private readonly IModuloService _moduloService;
+        private readonly IPhotoService _photoService;
 
-        public AuthService(UserManager<ApplicationUser> userManager, IConfiguration configuration, IPermisosPerfilService permisosPerfilService, IHttpClientFactory httpClientFactory, IPerfilService perfilService, IModuloService moduloService)
+        public AuthService(UserManager<ApplicationUser> userManager, IConfiguration configuration, IPermisosPerfilService permisosPerfilService, IHttpClientFactory httpClientFactory, IPerfilService perfilService, IModuloService moduloService, IPhotoService photoService)
         {
             _userManager = userManager;
             _configuration = configuration;
@@ -28,6 +29,7 @@ namespace WebCoorporativaAPI.Services
             _httpClientFactory = httpClientFactory;
             _perfilService = perfilService;
             _moduloService = moduloService;
+            _photoService = photoService;
         }
 
         public async Task<string?> Login(string? userName, string password, string captchaToken)
@@ -58,11 +60,30 @@ namespace WebCoorporativaAPI.Services
 
         public async Task<IdentityResult> Register(RegisterDTO register)
         {
+            string? imageUrl = null;
+
+            // 1. Si el usuario envió una imagen, la subimos a Cloudinary primero
+            if (register.Imagen != null && register.Imagen.Length > 0)
+            {
+                var result = await _photoService.AddPhotoAsync(register.Imagen);
+
+                if (result.Error != null)
+                {
+                    // Manejar el error de Cloudinary según tu lógica (ej. lanzar excepción)
+                    throw new Exception(result.Error.Message);
+                }
+
+                // Obtenemos la URL segura (https) que nos devuelve Cloudinary
+                imageUrl = result.SecureUrl.ToString();
+            }
+
+            // 2. Creamos el usuario con la URL obtenida (o null si no envió nada)
             var user = new ApplicationUser
             {
                 UserName = register.UserName,
                 IdPerfil = register.IdPerfil,
-                Activo = register.Activo
+                Activo = register.Activo,
+                Imagen = imageUrl // Aquí guardamos el string con la URL
             };
 
             return await _userManager.CreateAsync(user, register.Password);
