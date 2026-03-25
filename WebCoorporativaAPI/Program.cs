@@ -13,11 +13,11 @@ var builder = WebApplication.CreateBuilder(args);
 Microsoft.IdentityModel.Logging.IdentityModelEventSource.ShowPII = true;
 
 // 1. CONEXIÓN A BASE DE DATOS BLINDADA (Fuerza bruta como respaldo)
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+//var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 
 
-//var connectionString = Environment.GetEnvironmentVariable("DB_CONNECTION")
-//                       ?? "Server=db45210.public.databaseasp.net,1433;Database=db45210;User Id=db45210;Password=j@8SQ4h?5%Ar;MultipleActiveResultSets=true;TrustServerCertificate=True";
+var connectionString = Environment.GetEnvironmentVariable("DB_CONNECTION")
+                       ?? "Server=db45210.public.databaseasp.net,1433;Database=db45210;User Id=db45210;Password=j@8SQ4h?5%Ar;MultipleActiveResultSets=true;TrustServerCertificate=True";
 
 builder.Services.AddDbContext<AppDBContext>(options => options.UseSqlServer(connectionString));
 builder.Services.Configure<CloudinarySettings>(builder.Configuration.GetSection("CloudinarySettings"));
