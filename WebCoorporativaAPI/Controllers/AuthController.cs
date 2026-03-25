@@ -26,13 +26,9 @@ namespace WebCoorporativaAPI.Controllers
             var result = await _authService.Register(register);
 
             if (result.Succeeded)
-            {
                 return Ok("Usuario Creado");
-            }
             else
-            {
                 return BadRequest(result.Errors);
-            }
         }
 
         [HttpPost]

@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using WebCoorporativaAPI.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace WebCoorporativaAPI.Data
 {
@@ -10,7 +11,10 @@ namespace WebCoorporativaAPI.Data
             // 1. Asegurarnos de que la base de datos exista
             await context.Database.EnsureCreatedAsync();
 
-            // 2. Sembrar el Perfil primero (porque el usuario depende de este ID)
+            // --- NUEVA SECCIÓN: SEMBRAR MÓDULOS ---
+            await SeedModulosAsync(context);
+
+            // 2. Sembrar el Perfil
             if (!context.Perfiles.Any(p => p.strNombrePerfil == "Administrador Master"))
             {
                 var perfilAdmin = new PerfilModel
@@ -23,29 +27,52 @@ namespace WebCoorporativaAPI.Data
                 await context.SaveChangesAsync();
             }
 
-            // 3. Sembrar el Usuario usando Identity para encriptar la contraseña
+            // 3. Sembrar el Usuario
             if (await userManager.FindByNameAsync("admin") == null)
             {
-                // Obtenemos el ID del perfil que acabamos de crear
-                var perfil = context.Perfiles.FirstOrDefault(p => p.strNombrePerfil == "Administrador Master");
+                var perfil = await context.Perfiles.FirstOrDefaultAsync(p => p.strNombrePerfil == "Administrador Master");
 
-                var adminUser = new ApplicationUser
+                if (perfil != null)
                 {
-                    UserName = "admin",
-                    Email = "admin@empresa.com",
-                    IdPerfil = perfil.IdPerfil, // Lo vinculamos al perfil
-                    Activo = true,              // Requisito: Estado Activo
-                    Imagen = null               // Requisito: Imagen nula
-                };
+                    var adminUser = new ApplicationUser
+                    {
+                        UserName = "admin",
+                        Email = "admin@empresa.com",
+                        IdPerfil = perfil.IdPerfil,
+                        Activo = true,
+                        Imagen = null
+                    };
 
-                // El UserManager se encarga de crear el usuario y hashear esta contraseña
-                var result = await userManager.CreateAsync(adminUser, "Admin123456!");
-
-                if (!result.Succeeded)
-                {
-                    Console.WriteLine("Error al crear el usuario semilla.");
+                    await userManager.CreateAsync(adminUser, "Admin123456!");
                 }
             }
+        }
+
+        private static async Task SeedModulosAsync(AppDBContext context)
+        {
+            // Definimos la lista de módulos según tu tabla
+            var listaModulos = new List<ModuloModel>
+            {
+                new ModuloModel { strNombreModulo = "Modulos", Ruta = "/Module/Modulos", Clave = "modulo" },
+                new ModuloModel { strNombreModulo = "Perfil", Ruta = "/Module/Perfil", Clave = "perfil" },
+                new ModuloModel { strNombreModulo = "PermisosPerfil", Ruta = "/Module/PermisosPerfil", Clave = "permisosperfil" },
+                new ModuloModel { strNombreModulo = "Usuario", Ruta = "/Module/Usuario", Clave = "usuario" },
+                new ModuloModel { strNombreModulo = "Principal 1.1", Ruta = "/Principales/PrincipalU1", Clave = "principal11" },
+                new ModuloModel { strNombreModulo = "Principal 1.2", Ruta = "/Principales/PrincipalU2", Clave = "principal12" },
+                new ModuloModel { strNombreModulo = "Principal 2.1", Ruta = "/Principales/PrincipalD1", Clave = "principal21" },
+                new ModuloModel { strNombreModulo = "Principal 2.2", Ruta = "/Principales/PrincipalD2", Clave = "principal22" }
+            };
+
+            foreach (var mod in listaModulos)
+            {
+                // Verificamos si la Clave ya existe para no duplicar datos en cada ejecución
+                if (!await context.Modulos.AnyAsync(m => m.Clave == mod.Clave))
+                {
+                    context.Modulos.Add(mod);
+                }
+            }
+
+            await context.SaveChangesAsync();
         }
     }
 }

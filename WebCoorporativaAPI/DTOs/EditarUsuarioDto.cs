@@ -4,6 +4,7 @@
     {
         public int IdPerfil { get; set; }
         public bool Activo { get; set; }
+        public string? Imagen { get; set; }
 
     }
 }

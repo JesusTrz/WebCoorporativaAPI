@@ -12,8 +12,8 @@ using WebCoorporativaAPI.Data;
 namespace WebCoorporativaAPI.Migrations
 {
     [DbContext(typeof(AppDBContext))]
-    [Migration("20260324192518_NewDatabase")]
-    partial class NewDatabase
+    [Migration("20260325172126_DataInicialv1")]
+    partial class DataInicialv1
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

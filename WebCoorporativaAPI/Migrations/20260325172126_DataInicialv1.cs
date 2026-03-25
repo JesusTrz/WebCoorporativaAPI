@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace WebCoorporativaAPI.Migrations
 {
     /// <inheritdoc />
-    public partial class fixdatabasev1 : Migration
+    public partial class DataInicialv1 : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -32,7 +32,8 @@ namespace WebCoorporativaAPI.Migrations
                     IdModulo = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     strNombreModulo = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Ruta = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                    Ruta = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Clave = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
                 constraints: table =>
                 {

@@ -1,11 +1,11 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WebCoorporativaAPI.DTOs;
 using WebCoorporativaAPI.Helpers;
 using WebCoorporativaAPI.Infraestructure;
 using WebCoorporativaAPI.Models;
+using WebCoorporativaAPI.Services;
 
 namespace WebCoorporativaAPI.Controllers
 {
@@ -22,8 +22,11 @@ namespace WebCoorporativaAPI.Controllers
             _perfilService = perfilService;
         }
 
+        // =========================
+        // GET ALL
+        // =========================
         [HttpGet]
-        public async Task<IActionResult> GetAll()
+        public IActionResult GetAll()
         {
             var usuarios = _userManager.Users
                 .Include(u => u.Perfil)
@@ -40,6 +43,9 @@ namespace WebCoorporativaAPI.Controllers
             return Ok(usuarios);
         }
 
+        // =========================
+        // GET BY ID
+        // =========================
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(string id)
         {
@@ -59,35 +65,126 @@ namespace WebCoorporativaAPI.Controllers
             });
         }
 
+        // =========================
+        // EDITAR USUARIO (🔥 CORREGIDO)
+        // =========================
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(string id, [FromBody] EditarUsuarioDto dto)
+        public async Task<IActionResult> EditarUsuario(string id, [FromBody] EditarUsuarioDto dto)
         {
-            if (!User.TienePermiso("usuario.editar")) return Forbid();
+            if (!User.TienePermiso("usuario.editar"))
+                return Forbid();
+
+            var usuario = await _userManager.FindByIdAsync(id);
+            if (usuario == null)
+                return NotFound();
+
+            // ✅ actualizar datos básicos
+            usuario.IdPerfil = dto.IdPerfil;
+            usuario.Activo = dto.Activo;
+
+            // =========================
+            // 🔥 VALIDACIÓN DE IMAGEN BASE64
+            // =========================
+            if (!string.IsNullOrEmpty(dto.Imagen))
+            {
+                try
+                {
+                    // 1. Validar formato base64 imagen
+                    if (!dto.Imagen.StartsWith("data:image"))
+                        return BadRequest("Formato de imagen inválido");
+
+                    var partes = dto.Imagen.Split(',');
+                    if (partes.Length != 2)
+                        return BadRequest("Base64 inválido");
+
+                    var base64 = partes[1];
+
+                    byte[] bytes;
+                    try
+                    {
+                        bytes = Convert.FromBase64String(base64);
+                    }
+                    catch
+                    {
+                        return BadRequest("Error al decodificar la imagen");
+                    }
+
+                    // 🔥 VALIDAR TAMAÑO (2MB)
+                    int maxSize = 2 * 1024 * 1024;
+
+                    if (bytes.Length > maxSize)
+                        return BadRequest("La imagen no debe superar 2MB");
+
+                    // 🔥 (Opcional pero recomendado) eliminar imagen anterior
+                    if (!string.IsNullOrEmpty(usuario.Imagen))
+                    {
+                        var rutaAnterior = Path.Combine(
+                            Directory.GetCurrentDirectory(),
+                            "wwwroot",
+                            usuario.Imagen.TrimStart('/')
+                        );
+
+                        if (System.IO.File.Exists(rutaAnterior))
+                            System.IO.File.Delete(rutaAnterior);
+                    }
+
+                    // Guardar nueva imagen
+                    usuario.Imagen = await GuardarImagen(bytes);
+                }
+                catch (Exception ex)
+                {
+                    return BadRequest($"Error procesando imagen: {ex.Message}");
+                }
+            }
+
+            // =========================
+            // GUARDAR
+            // =========================
+            var result = await _userManager.UpdateAsync(usuario);
+
+            if (!result.Succeeded)
+                return BadRequest(result.Errors);
+
+            return Ok("Usuario actualizado correctamente");
+        }
+
+        // =========================
+        // DELETE
+        // =========================
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Delete(string id)
+        {
+            if (!User.TienePermiso("usuario.eliminar"))
+                return Forbid();
 
             var user = await _userManager.FindByIdAsync(id);
-            if (user == null) return NotFound();
+            if (user == null)
+                return NotFound();
 
-            user.IdPerfil = dto.IdPerfil;
-            user.Activo = dto.Activo;
+            var result = await _userManager.DeleteAsync(user);
 
-            var result = await _userManager.UpdateAsync(user);
-            if (!result.Succeeded) return BadRequest(result.Errors);
+            if (!result.Succeeded)
+                return BadRequest(result.Errors);
 
             return Ok();
         }
 
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(string id)
+        // =========================
+        // GUARDAR IMAGEN
+        // =========================
+        private async Task<string> GuardarImagen(byte[] bytes)
         {
-            if (!User.TienePermiso("usuario.eliminar")) return Forbid();
+            var folder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images");
 
-            var user = await _userManager.FindByIdAsync(id);
-            if (user == null) return NotFound();
+            if (!Directory.Exists(folder))
+                Directory.CreateDirectory(folder);
 
-            var result = await _userManager.DeleteAsync(user);
-            if (!result.Succeeded) return BadRequest(result.Errors);
+            var fileName = $"{Guid.NewGuid()}.png";
+            var filePath = Path.Combine(folder, fileName);
 
-            return Ok();
+            await System.IO.File.WriteAllBytesAsync(filePath, bytes);
+
+            return $"/images/{fileName}";
         }
     }
 }
