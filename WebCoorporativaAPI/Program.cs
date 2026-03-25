@@ -38,13 +38,20 @@ builder.Services.AddHttpClient();
 builder.Services.AddAuthorization();
 
 // 2. CONFIGURACIÓN CORS (Indispensable para que Fetch API funcione desde el front)
+// 2. CONFIGURACIÓN CORS (Indispensable para que Fetch API funcione desde el front)
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("PermitirFrontend", policy =>
     {
-        policy.AllowAnyOrigin()
+        policy.WithOrigins(
+                "http://localhost:5017",   // Puerto HTTP por defecto
+                "https://localhost:7079",  // Puerto HTTPS por defecto
+                "http://localhost:5017",   // (Añade aquí el puerto exacto de tu Razor Pages)
+                "https://localhost:7079"   // (Añade aquí el puerto exacto de tu Razor Pages)
+              )
               .AllowAnyHeader()
-              .AllowAnyMethod();
+              .AllowAnyMethod()
+              .AllowCredentials(); // Vital si en algún momento envías cookies o tokens específicos
     });
 });
 
