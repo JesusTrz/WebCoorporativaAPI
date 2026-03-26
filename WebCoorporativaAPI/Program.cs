@@ -55,12 +55,22 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddHttpClient();
 builder.Services.AddAuthorization();
 
-builder.Services.AddSingleton(new Cloudinary(new Account(
-    builder.Configuration["Cloudinary:CloudName"],
-    builder.Configuration["Cloudinary:ApiKey"],
-    builder.Configuration["Cloudinary:ApiSecret"]
-)));
+// ☁️ CLOUDINARY
+var cloudName = Environment.GetEnvironmentVariable("CLOUDINARY_CLOUD_NAME")
+                ?? builder.Configuration["Cloudinary:CloudName"];
+var apiKey = Environment.GetEnvironmentVariable("CLOUDINARY_API_KEY")
+             ?? builder.Configuration["Cloudinary:ApiKey"];
+var apiSecret = Environment.GetEnvironmentVariable("CLOUDINARY_API_SECRET")
+                ?? builder.Configuration["Cloudinary:ApiSecret"];
 
+if (string.IsNullOrEmpty(cloudName) || string.IsNullOrEmpty(apiKey) || string.IsNullOrEmpty(apiSecret))
+{
+    Console.WriteLine("⚠️ ADVERTENCIA: Faltan las credenciales de Cloudinary. Verifica las variables de entorno.");
+}
+else
+{
+    builder.Services.AddSingleton(new Cloudinary(new Account(cloudName, apiKey, apiSecret)));
+}
 
 // 🌐 CORS
 builder.Services.AddCors(options =>
