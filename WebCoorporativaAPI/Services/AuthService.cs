@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using CloudinaryDotNet;
+using CloudinaryDotNet.Actions;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -18,6 +20,7 @@ namespace WebCoorporativaAPI.Services
         private readonly IPerfilService _perfilService;
         private readonly IPermisosPerfilService _permisosPerfilService;
         private readonly IModuloService _moduloService;
+        private readonly Cloudinary _cloudinary;
 
         public AuthService(
             UserManager<ApplicationUser> userManager,
@@ -25,7 +28,8 @@ namespace WebCoorporativaAPI.Services
             IHttpClientFactory httpClientFactory,
             IPerfilService perfilService,
             IPermisosPerfilService permisosPerfilService,
-            IModuloService moduloService)
+            IModuloService moduloService,
+            Cloudinary cloudinary)
         {
             _userManager = userManager;
             _configuration = configuration;
@@ -33,6 +37,7 @@ namespace WebCoorporativaAPI.Services
             _perfilService = perfilService;
             _permisosPerfilService = permisosPerfilService;
             _moduloService = moduloService;
+            _cloudinary = cloudinary;
         }
 
         // ================= LOGIN =================
@@ -236,29 +241,22 @@ namespace WebCoorporativaAPI.Services
         // ================= GUARDAR IMAGEN =================
         private async Task<string> GuardarImagen(byte[] bytes)
         {
-            try
+            using var stream = new MemoryStream(bytes);
+
+            var uploadParams = new ImageUploadParams
             {
-                var folder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images");
+                File = new FileDescription("avatar", stream),
+                Folder = "usuarios",
+                Transformation = new Transformation()
+                    .Width(200).Height(200).Crop("fill")
+            };
 
-                if (!Directory.Exists(folder))
-                    Directory.CreateDirectory(folder);
+            var result = await _cloudinary.UploadAsync(uploadParams);
 
-                var fileName = $"{Guid.NewGuid()}.png";
-                var filePath = Path.Combine(folder, fileName);
+            if (result.Error != null)
+                throw new Exception($"Cloudinary error: {result.Error.Message}");
 
-                Console.WriteLine($"Guardando imagen: {filePath}");
-                Console.WriteLine($"Peso: {bytes.Length} bytes");
-
-                await File.WriteAllBytesAsync(filePath, bytes);
-
-                return $"/images/{fileName}";
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("🔥 ERROR GUARDANDO IMAGEN:");
-                Console.WriteLine(ex.ToString());
-                throw;
-            }
+            return result.SecureUrl.ToString(); // URL permanente HTTPS
         }
     }
 }

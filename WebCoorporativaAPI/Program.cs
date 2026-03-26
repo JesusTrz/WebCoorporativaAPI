@@ -1,3 +1,4 @@
+using CloudinaryDotNet;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -11,25 +12,33 @@ using WebCoorporativaAPI.Services;
 AppDomain.CurrentDomain.UnhandledException += (sender, e) =>
 {
     var ex = e.ExceptionObject as Exception;
-    File.AppendAllText("C:/crash_api.txt",
-        $"[{DateTime.Now}] {ex?.Message}\n{ex?.StackTrace}\n{ex?.InnerException?.Message}\n\n");
+    var path = Path.Combine(AppContext.BaseDirectory, "crash_api.txt");
+    File.AppendAllText(path, $"[{DateTime.Now}] {ex?.Message}\n{ex?.StackTrace}\n\n");
 };
 
 var builder = WebApplication.CreateBuilder(args);
+
+// 🔥 LÍMITES DE TAMAÑO — agrega esto justo después de la línea anterior
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.Limits.MaxRequestBodySize = 10 * 1024 * 1024; // 10MB
+});
+
 Microsoft.IdentityModel.Logging.IdentityModelEventSource.ShowPII = true;
 
 // 🔗 CONEXIÓN A DB
 // 1. CONEXIÓN A BASE DE DATOS BLINDADA (Fuerza bruta como respaldo)
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+//var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 
 
-//var connectionString = Environment.GetEnvironmentVariable("DB_CONNECTION")
-//                       ?? "Server=db45210.public.databaseasp.net,1433;Database=db45210;User Id=db45210;Password=j@8SQ4h?5%Ar;MultipleActiveResultSets=true;TrustServerCertificate=True";
+var connectionString = Environment.GetEnvironmentVariable("DB_CONNECTION")
+                       ?? "Server=db45210.public.databaseasp.net,1433;Database=db45210;User Id=db45210;Password=j@8SQ4h?5%Ar;MultipleActiveResultSets=true;TrustServerCertificate=True";
 
 builder.Services.AddDbContext<AppDBContext>(options =>
     options.UseSqlServer(connectionString));
 
 // 🔌 DEPENDENCIAS
+// Agrega esto antes de builder.Build()
 builder.Services.AddScoped(typeof(IBaseService<>), typeof(BaseService<>));
 builder.Services.AddScoped<IPerfilService, PerfilService>();
 builder.Services.AddScoped<IModuloService, ModuloService>();
@@ -45,6 +54,13 @@ builder.Services.AddOpenApi();
 builder.Services.AddSwaggerGen();
 builder.Services.AddHttpClient();
 builder.Services.AddAuthorization();
+
+builder.Services.AddSingleton(new Cloudinary(new Account(
+    builder.Configuration["Cloudinary:CloudName"],
+    builder.Configuration["Cloudinary:ApiKey"],
+    builder.Configuration["Cloudinary:ApiSecret"]
+)));
+
 
 // 🌐 CORS
 builder.Services.AddCors(options =>

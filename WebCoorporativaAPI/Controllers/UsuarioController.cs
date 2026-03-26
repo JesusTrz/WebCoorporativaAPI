@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using CloudinaryDotNet;
+using CloudinaryDotNet.Actions;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WebCoorporativaAPI.DTOs;
@@ -15,11 +17,13 @@ namespace WebCoorporativaAPI.Controllers
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IPerfilService _perfilService;
+        private readonly Cloudinary _cloudinary;
 
-        public UsuarioController(UserManager<ApplicationUser> userManager, IPerfilService perfilService)
+        public UsuarioController(UserManager<ApplicationUser> userManager, IPerfilService perfilService, Cloudinary cloudinary)
         {
             _userManager = userManager;
             _perfilService = perfilService;
+            _cloudinary = cloudinary;
         }
 
         // =========================
@@ -89,15 +93,20 @@ namespace WebCoorporativaAPI.Controllers
             {
                 try
                 {
-                    // 1. Validar formato base64 imagen
+                    // VALIDAR FORMATO
                     if (!dto.Imagen.StartsWith("data:image"))
                         return BadRequest("Formato de imagen inválido");
 
+                    // VALIDAR LONGITUD BASE64
+                    if (dto.Imagen.Length > 3_000_000)
+                        return BadRequest("Imagen demasiado grande");
+
+                    // SEPARAR BASE64
                     var partes = dto.Imagen.Split(',');
                     if (partes.Length != 2)
-                        return BadRequest("Base64 inválido");
+                        return BadRequest("Imagen inválida");
 
-                    var base64 = partes[1];
+                    var base64 = partes[1].Trim();
 
                     byte[] bytes;
                     try
@@ -106,34 +115,20 @@ namespace WebCoorporativaAPI.Controllers
                     }
                     catch
                     {
-                        return BadRequest("Error al decodificar la imagen");
+                        return BadRequest("Error al decodificar imagen");
                     }
 
-                    // 🔥 VALIDAR TAMAÑO (2MB)
-                    int maxSize = 2 * 1024 * 1024;
-
-                    if (bytes.Length > maxSize)
+                    // VALIDAR PESO REAL
+                    if (bytes.Length > 2 * 1024 * 1024)
                         return BadRequest("La imagen no debe superar 2MB");
 
-                    // 🔥 (Opcional pero recomendado) eliminar imagen anterior
-                    if (!string.IsNullOrEmpty(usuario.Imagen))
-                    {
-                        var rutaAnterior = Path.Combine(
-                            Directory.GetCurrentDirectory(),
-                            "wwwroot",
-                            usuario.Imagen.TrimStart('/')
-                        );
-
-                        if (System.IO.File.Exists(rutaAnterior))
-                            System.IO.File.Delete(rutaAnterior);
-                    }
-
-                    // Guardar nueva imagen
-                    usuario.Imagen = await GuardarImagen(bytes);
+                    // GUARDAR
+                    var imageUrl = await GuardarImagen(bytes);
+                    usuario.Imagen = imageUrl;
                 }
                 catch (Exception ex)
                 {
-                    return BadRequest($"Error procesando imagen: {ex.Message}");
+                    return BadRequest($"Error imagen: {ex.Message}");
                 }
             }
 
@@ -174,17 +169,22 @@ namespace WebCoorporativaAPI.Controllers
         // =========================
         private async Task<string> GuardarImagen(byte[] bytes)
         {
-            var folder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images");
+            using var stream = new MemoryStream(bytes);
 
-            if (!Directory.Exists(folder))
-                Directory.CreateDirectory(folder);
+            var uploadParams = new ImageUploadParams
+            {
+                File = new FileDescription("avatar", stream),
+                Folder = "usuarios",
+                Transformation = new Transformation()
+                    .Width(200).Height(200).Crop("fill")
+            };
 
-            var fileName = $"{Guid.NewGuid()}.png";
-            var filePath = Path.Combine(folder, fileName);
+            var result = await _cloudinary.UploadAsync(uploadParams);
 
-            await System.IO.File.WriteAllBytesAsync(filePath, bytes);
+            if (result.Error != null)
+                throw new Exception($"Cloudinary error: {result.Error.Message}");
 
-            return $"/images/{fileName}";
+            return result.SecureUrl.ToString();
         }
     }
 }
