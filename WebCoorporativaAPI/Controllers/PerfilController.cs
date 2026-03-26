@@ -11,7 +11,7 @@ namespace WebCoorporativaAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    //[Authorize]
+    [Authorize]
     //[AllowAnonymous]
     public class PerfilController : ControllerBase
     {

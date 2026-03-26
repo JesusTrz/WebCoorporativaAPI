@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 
 namespace WebCoorporativaAPI.Models
 {
@@ -6,8 +7,11 @@ namespace WebCoorporativaAPI.Models
     {
         [Key]
         public int IdPerfil { get; set; }
+        [Required(ErrorMessage = "El nombre del perfil es obligatorio")]
+        [MaxLength(80)]
         public string strNombrePerfil { get; set; }
-        public bool BitAdministrador { get; set; }
+        [DefaultValue(false)]
+        public bool BitAdministrador { get; set; } = false;
 
         public ICollection<PermisosPerfilModel> PermisosPerfilModels { get; set; } = new List<PermisosPerfilModel>();
     }

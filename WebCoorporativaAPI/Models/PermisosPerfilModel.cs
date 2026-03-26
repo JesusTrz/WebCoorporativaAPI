@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace WebCoorporativaAPI.Models
@@ -9,15 +10,16 @@ namespace WebCoorporativaAPI.Models
         public int IdPperfil { get; set; }
         public int IdModulo { get; set; }
         public int IdPerfil { get; set; }
-        public bool BitAgregar { get; set; }
-
-        public bool BitEditar { get; set; }
-
-        public bool BitConsulta { get; set; }
-
-        public bool BitEliminar { get; set; }
-
-        public bool BitDetalle { get; set; }
+        [DefaultValue(false)]
+        public bool BitAgregar { get; set; } = false;
+        [DefaultValue(false)]
+        public bool BitEditar { get; set; } = false;
+        [DefaultValue(false)]
+        public bool BitConsulta { get; set; } = false;
+        [DefaultValue(false)]
+        public bool BitEliminar { get; set; } = false;
+        [DefaultValue(false)]
+        public bool BitDetalle { get; set; } = false;
         [ForeignKey("IdModulo")]
         public Models.ModuloModel Modulo { get; set; }
         [ForeignKey("IdPerfil")]

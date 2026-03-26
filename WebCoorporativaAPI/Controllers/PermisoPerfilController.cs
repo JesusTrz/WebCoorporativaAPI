@@ -12,7 +12,7 @@ namespace WebCoorporativaAPI.Controllers
     [Route("api/[controller]")]
     [ApiController]
     [Authorize]
-    [AllowAnonymous]
+    //[AllowAnonymous]
     public class PermisoPerfilController : ControllerBase
     {
         private readonly IPermisosPerfilService _permisosPerfilService;
@@ -24,9 +24,6 @@ namespace WebCoorporativaAPI.Controllers
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
-            //if (!User.TienePermiso("3.consultar"))
-            //    return Forbid();
-
             var permisosPerfil = await _permisosPerfilService.GetAll();
             return Ok(permisosPerfil);
         }
@@ -65,14 +62,15 @@ namespace WebCoorporativaAPI.Controllers
         [HttpPost("guardar-permisos")]
         public async Task<IActionResult> GuardarPermisos([FromBody] PermisosPerfilDTO dto)
         {
-            if (!User.TienePermiso("permisosperfil.agregar")) return Forbid();
+            if (!User.TienePermiso("permisosperfil.editar")) return Forbid();
 
-            Console.WriteLine($"IdPerfil: {dto?.IdPerfil}");
-            Console.WriteLine($"Modulos count: {dto?.Modulos?.Count}");
+            if (dto == null || dto.Modulos == null || !dto.Modulos.Any())
+                return BadRequest("La solicitud está vacía o no contiene módulos.");
 
-            if (dto == null || dto.Modulos == null)
-                return BadRequest("DTO vacío");
             var result = await _permisosPerfilService.GuardarPermisos(dto);
+
+            if (!result) return BadRequest("Error al guardar los permisos. Verifica que el perfil exista.");
+
             return Ok(new { message = "Permisos Actualizados Correctamente" });
         }
 

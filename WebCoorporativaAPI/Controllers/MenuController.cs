@@ -9,7 +9,7 @@ namespace WebCoorporativaAPI.Controllers
     [Route("api/[controller]")]
     [ApiController]
     [Authorize]
-    [AllowAnonymous]
+    //[AllowAnonymous]
     public class MenuController : ControllerBase
     {
         private readonly IMenuService _menuService;
