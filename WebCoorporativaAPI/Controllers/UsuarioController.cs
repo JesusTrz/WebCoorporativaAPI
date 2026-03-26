@@ -164,6 +164,33 @@ namespace WebCoorporativaAPI.Controllers
             return Ok();
         }
 
+        [HttpGet("mi-perfil")]
+        public async Task<IActionResult> GetMiPerfil()
+        {
+            // Identity recupera automáticamente al usuario basado en el token/cookie de la petición
+            var user = await _userManager.GetUserAsync(User);
+
+            if (user == null)
+            {
+                return Unauthorized(new { exito = false, mensaje = "No hay una sesión activa." });
+            }
+
+            // Buscamos el detalle del perfil con el servicio que ya tienes inyectado
+            var perfil = await _perfilService.GetById(user.IdPerfil);
+
+            // Retornamos un objeto ligero solo con lo necesario para la barra de navegación
+            var vistaRapida = new
+            {
+                id = user.Id,
+                userName = user.UserName,
+                nombrePerfil = perfil?.strNombrePerfil ?? "Sin perfil asignado",
+                imagen = user.Imagen,
+                activo = user.Activo
+            };
+
+            return Ok(new { exito = true, data = vistaRapida });
+        }
+
         // =========================
         // GUARDAR IMAGEN
         // =========================
