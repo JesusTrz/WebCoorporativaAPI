@@ -121,7 +121,7 @@ namespace WebCoorporativaAPI.Controllers
         //}
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> Put(int id, [FromBody] ModuloDTO dto)
+        public async Task<IActionResult> Put(int id, ModuloDTO dto)
         {
             if (!User.TienePermiso("modulo.editar")) return Forbid();
 
