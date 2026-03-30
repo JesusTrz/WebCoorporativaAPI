@@ -2,6 +2,6 @@
 {
     public class ActualizarImagenDto
     {
-        public string Imagen { get; set; }
+        public string? Imagen { get; set; }
     }
 }

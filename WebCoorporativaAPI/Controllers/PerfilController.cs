@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using WebCoorporativaAPI.Constant;
 using WebCoorporativaAPI.Helpers;
@@ -16,10 +17,11 @@ namespace WebCoorporativaAPI.Controllers
     public class PerfilController : ControllerBase
     {
         private readonly IPerfilService _perfilService;
-
-        public PerfilController(IPerfilService perfilService)
+        private readonly UserManager<ApplicationUser> _userManager;
+        public PerfilController(IPerfilService perfilService, UserManager<ApplicationUser> userManager)
         {
             _perfilService = perfilService;
+            _userManager = userManager;
         }
 
         [HttpGet]
@@ -87,15 +89,16 @@ namespace WebCoorporativaAPI.Controllers
         {
             if (!User.TienePermiso("perfil.eliminar")) return Forbid();
 
+            // Validación antes de eliminar
+            var estaEnUso = _userManager.Users.Any(u => u.IdPerfil == id);
+            if (estaEnUso)
+                return BadRequest("No se puede eliminar el perfil porque está asignado a uno o más usuarios.");
+
             var result = await _perfilService.Delete(id);
             if (!result)
-            {
                 return NotFound();
-            }
-            else
-            {
-                return Ok(result);
-            }
+
+            return Ok(result);
         }
     }
 }
