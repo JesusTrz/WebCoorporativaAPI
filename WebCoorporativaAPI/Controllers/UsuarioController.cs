@@ -72,6 +72,48 @@ namespace WebCoorporativaAPI.Controllers
         }
 
         // =========================
+        // PATCH - ACTUALIZAR IMAGEN PROPIA
+        // =========================
+        [HttpPatch("mi-perfil/imagen")]
+        public async Task<IActionResult> ActualizarMiImagen([FromBody] ActualizarImagenDto dto)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return Unauthorized();
+
+            if (string.IsNullOrEmpty(dto.Imagen))
+                return BadRequest("No se recibió imagen.");
+
+            try
+            {
+                if (!dto.Imagen.StartsWith("data:image"))
+                    return BadRequest("Formato de imagen inválido.");
+
+                var partes = dto.Imagen.Split(',');
+                if (partes.Length != 2)
+                    return BadRequest("Imagen inválida.");
+
+                byte[] bytes;
+                try { bytes = Convert.FromBase64String(partes[1].Trim()); }
+                catch { return BadRequest("Error al decodificar imagen."); }
+
+                if (bytes.Length > 2 * 1024 * 1024)
+                    return BadRequest("La imagen no debe superar 2MB.");
+
+                user.Imagen = await GuardarImagen(bytes);
+
+                var result = await _userManager.UpdateAsync(user);
+                if (!result.Succeeded)
+                    return BadRequest(result.Errors);
+
+                return Ok(new { imagen = user.Imagen });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest($"Error: {ex.Message}");
+            }
+        }
+
+        // =========================
         // EDITAR USUARIO (🔥 CORREGIDO)
         // =========================
         [HttpPut("{id}")]
